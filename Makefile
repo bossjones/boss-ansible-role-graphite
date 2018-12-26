@@ -11,6 +11,7 @@ DNSMASQ_DOMAIN         := hyenalab.home
 # URL_PATH_TRAEFIK       := 80
 # URL_PATH_TRAEFIK_API   := 8080
 URL_PATH_NETDATA_REGISTRY  := "http://graphite-master1.$(DNSMASQ_DOMAIN):19999"
+URL_PATH_GRAPHITE          := "http://graphite-master1.$(DNSMASQ_DOMAIN):8080"
 URL_PATH_WHOAMI            := "http://whoami.$(DNSMASQ_DOMAIN)"
 URL_PATH_ECHOSERVER        := "http://echoserver.$(DNSMASQ_DOMAIN)"
 URL_PATH_ELASTICSEARCH     := "http://elasticsearch.$(DNSMASQ_DOMAIN)"
@@ -246,4 +247,7 @@ run-ansible-netdata:
 open-netdata-registry:
 	./scripts/open-browser.py $(URL_PATH_NETDATA_REGISTRY)
 
-open: open-netdata-registry
+open-graphite:
+	./scripts/open-browser.py $(URL_PATH_GRAPHITE)
+
+open: open-netdata-registry open-graphite
