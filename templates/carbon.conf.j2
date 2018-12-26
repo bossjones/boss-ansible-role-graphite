@@ -1,12 +1,54 @@
 # See {{ graphite_install_path }}/conf/carbon.conf.example for more information.
+# See: https://github.com/hopsoft/docker-graphite-statsd/blob/master/conf/opt/graphite/conf/carbon.conf
 
 [cache]
+# Configure carbon directories.
+#
+# OS environment variables can be used to tell carbon where graphite is
+# installed, where to read configuration from and where to write data.
+#
+#   GRAPHITE_ROOT        - Root directory of the graphite installation.
+#                          Defaults to ../
+#   GRAPHITE_CONF_DIR    - Configuration directory (where this file lives).
+#                          Defaults to $GRAPHITE_ROOT/conf/
+#   GRAPHITE_STORAGE_DIR - Storage directory for whipser/rrd/log/pid files.
+#                          Defaults to $GRAPHITE_ROOT/storage/
+#
+# To change other directory paths, add settings to this file. The following
+# configuration variables are available with these default values:
+#
+#   STORAGE_DIR    = $GRAPHITE_STORAGE_DIR
+#   LOCAL_DATA_DIR = STORAGE_DIR/whisper/
+#   WHITELISTS_DIR = STORAGE_DIR/lists/
+#   CONF_DIR       = STORAGE_DIR/conf/
+#   LOG_DIR        = STORAGE_DIR/log/
+#   PID_DIR        = STORAGE_DIR/
+#
+# For FHS style directory structures, use:
+#
+#   STORAGE_DIR    = /var/lib/carbon/
+#   CONF_DIR       = /etc/carbon/
+#   LOG_DIR        = /var/log/carbon/
+#   PID_DIR        = /var/run/
+#
+
 LOCAL_DATA_DIR = {{ graphite_cache_local_data_dir }}
 DATABASE = {{ graphite_cache_database }}
 ENABLE_LOGROTATION = {{ graphite_cache_enable_log_rotation }}
 USER = {{ graphite_cache_user|default("") }}
+
+# Limit the size of the cache to avoid swapping or becoming CPU bound.
+# Sorts and serving cache queries gets more expensive as the cache grows.
+# Use the value "inf" (infinity) for an unlimited cache size.
 MAX_CACHE_SIZE = {{ graphite_cache_max_cache_size }}
+
+# Limits the number of whisper update_many() calls per second, which effectively
+# means the number of write requests sent to the disk. This is intended to
+# prevent over-utilizing the disk and thus starving the rest of the system.
+# When the rate of required updates exceeds this, then carbon's caching will
+# take effect and increase the overall throughput accordingly.
 MAX_UPDATES_PER_SECOND = {{ graphite_cache_max_updates_per_second }}
+
 MAX_UPDATES_PER_SECOND_ON_SHUTDOWN = {{ graphite_cache_max_updates_per_second_on_shutdown }}
 MAX_CREATES_PER_MINUTE = {{ graphite_cache_max_creates_per_minute }}
 MIN_TIMESTAMP_RESOLUTION = {{ graphite_cache_min_timestamp_resolution }}
