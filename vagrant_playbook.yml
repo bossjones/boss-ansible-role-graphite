@@ -59,6 +59,8 @@
       # Defines your primary domain name (FQDN)
       ntp_pri_domain_name: 'localdomain'
 
+    - role: ansible-nginx
+      nginx_listen_port: 8080
     - role: ../
       graphite_secret_key: testtest123
       version: 1.1.3
