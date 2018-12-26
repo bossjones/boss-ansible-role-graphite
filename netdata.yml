@@ -38,6 +38,16 @@
       nginx_listen_port: 8080
     - role: ansible-netdata
     - role: ansible-motd
+
+    # weekly
+    # size 50M
+    # missingok
+    # rotate 10
+    # compress
+    # delaycompress
+    # notifempty
+    # copytruncate
+    # su root syslog
     - role: ansible-logrotate
       # defaults file for ansible-logrotate
       # Defines if you want your log files compressed

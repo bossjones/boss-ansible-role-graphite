@@ -59,19 +59,19 @@
 
           # /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin
 
-          location /media {
-            # django admin static files
-            # your Django project's media files - amend as required
-            alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/media/;
-          }
+          # location /media {
+          #   # django admin static files
+          #   # your Django project's media files - amend as required
+          #   alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/media/;
+          # }
 
-          location /admin/auth/admin {
-            alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin;
-          }
+          # location /admin/auth/admin {
+          #   alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin;
+          # }
 
-          location /admin/auth/user/admin {
-            alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin;
-          }
+          # location /admin/auth/user/admin {
+          #   alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin;
+          # }
 
           location / {
               proxy_set_header X-Forwarded-Host $host;

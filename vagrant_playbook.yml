@@ -61,6 +61,7 @@
 
     - role: ansible-nginx
       nginx_listen_port: 8080
+      # SOURCE: https://uwsgi-docs.readthedocs.io/en/latest/Nginx.html
     - role: ../
       graphite_secret_key: testtest123
       version: 1.1.3
@@ -68,6 +69,89 @@
       graphite_cache_graphite_url: 'http://127.0.0.1:8083'
       bossjones__user: vagrant
       bossjones__group: vagrant
+
+
+    # # weekly
+    # # size 50M
+    # # missingok
+    # # rotate 10
+    # # compress
+    # # delaycompress
+    # # notifempty
+    # # copytruncate
+    # # su root syslog
+    # - role: ansible-logrotate
+    #   # defaults file for ansible-logrotate
+    #   # Defines if you want your log files compressed
+    #   logrotate_compress: false
+
+    #   # packages drop log rotation information into this directory
+    #   logrotate_conf_dir: '/etc/logrotate.d/'
+
+    #   logrotate_config: true
+
+    #   logrotate_configs:
+    #     - name: 'carbon-cache'
+    #       compress: true
+    #       copytruncate: false
+    #       create:
+    #         mode: '640'
+    #         owner: 'graphite'
+    #         group: 'graphite'
+    #       delaycompress: true
+    #       logs:
+    #         - '/var/log/netdata/*.log'
+    #       # If the log file is missing, go on to the next one without
+    #       # issuing an error message.
+    #       missingok: true
+    #       # Do not rotate the log if it is empty
+    #       notifempty: true
+    #       postrotate:
+    #         - '/bin/kill -HUP `pidof netdata 2>/dev/null` 2>/dev/null || true'
+    #       rotate: '14'
+    #       rotation: 'daily'
+    #       sharedscripts: true
+    #     - name: 'nginx'
+    #       compress: true
+    #       copytruncate: false
+    #       create:
+    #         mode: '664'
+    #         owner: 'www-data'
+    #         group: 'adm'
+    #       delaycompress: true
+    #       logs:
+    #         - '/var/log/nginx/*.log'
+    #       # If the log file is missing, go on to the next one without
+    #       # issuing an error message.
+    #       missingok: true
+    #       # Do not rotate the log if it is empty
+    #       notifempty: true
+    #       postrotate:
+    #         - '[ ! -f /var/run/nginx.pid ] || kill -HUP `cat /var/run/nginx.pid`'
+    #       rotate: '20'
+    #       rotation: 'daily'
+    #       sharedscripts: true
+
+
+    #   # create new (empty) log files after rotating old ones
+    #   logrotate_create_new: true
+
+    #   logrotate_default_backlogs_rotate: '4'
+
+    #   logroate_default_configs:
+    #     - 'apt'
+    #     - 'dpkg'
+    #     - 'rsyslog'
+    #     - 'ufw'
+
+    #   # Defines the default rotate schedule
+    #   # hourly | daily | weekly | monthly
+    #   logrotate_default_rotate: 'daily'
+
+    #   # Defines if logrotate configs defined in logroate_default_configs
+    #   # should be removed or not
+    #   logrotate_remove_default_configs: false
+
 
   tasks:
 
