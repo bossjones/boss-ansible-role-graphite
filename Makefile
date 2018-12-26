@@ -251,3 +251,10 @@ open-graphite:
 	./scripts/open-browser.py $(URL_PATH_GRAPHITE)
 
 open: open-netdata-registry open-graphite
+
+delete-whisper:
+	find /opt/graphite/storage/whisper -type f -name \*.wsp -delete; find /opt/graphite/storage/whisper -depth -type d -empty -delete
+
+# 120 days old
+delete-whisper-by-date:
+	find /opt/graphite/storage/whisper -type f -mtime +120 -name \*.wsp -delete; find /opt/graphite/storage/whisper -depth -type d -empty -delete

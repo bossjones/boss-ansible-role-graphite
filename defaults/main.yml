@@ -17,7 +17,9 @@ graphite_service_carbon_open_files_limit: 4096
 
 # The default is "60s:1d" (1 day data), this will keep data for 5 years.
 # If you log a lot of data, you may need to restrict this to a shorter time.
-graphite_storage_schemas_default_retentions: "10s:14d,1m:90d,30m:1y,1h:5y"
+# graphite_storage_schemas_default_retentions: "10s:14d,1m:90d,30m:1y,1h:5y"
+# graphite_storage_schemas_default_retentions: "10s:5h,1m:10d,30m:15h,1h:1d"
+graphite_storage_schemas_default_retentions: "10s:1h,1m:24h,5m:3m"
 graphite_storage_schemas_carbon_retentions: 60:90d
 graphite_storage_schemas: []
 
