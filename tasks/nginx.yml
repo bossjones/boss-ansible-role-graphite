@@ -12,10 +12,11 @@
       access_log /var/log/nginx/graphite.access.log;
       error_log /var/log/nginx/graphite.error.log;
 
-      upstream backend {
-          server 127.0.0.1:8083;
-          keepalive 1024;
-      }
+      # FIXME: Temporarily disabled 12/26/2018
+      # upstream graphite {
+      #     server 127.0.0.1:8083;
+      #     keepalive 1024;
+      # }
 
       # # the upstream component nginx needs to connect to
       # upstream django {
@@ -31,8 +32,8 @@
 
           # FIXME: Might not work?
           # https://github.com/hopsoft/docker-graphite-statsd/blob/master/conf/etc/nginx/sites-enabled/graphite-statsd.conf
-          root /opt/graphite/webapp/content;
-          index index.html;
+          # root /opt/graphite/webapp/content;
+          # index index.html;
 
           # max upload size
           client_max_body_size 75M;   # adjust to taste
@@ -74,14 +75,14 @@
           # }
 
           location / {
-              proxy_set_header X-Forwarded-Host $host;
-              proxy_set_header X-Forwarded-Server $host;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_pass http://backend;
-              proxy_http_version 1.1;
-              proxy_pass_request_headers on;
-              proxy_set_header Connection "keep-alive";
-              proxy_store off;
+              # proxy_set_header X-Forwarded-Host $host;
+              # proxy_set_header X-Forwarded-Server $host;
+              # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              # proxy_pass http://graphite;
+              # proxy_http_version 1.1;
+              # proxy_pass_request_headers on;
+              # proxy_set_header Connection "keep-alive";
+              # proxy_store off;
               gzip on;
               gzip_proxied any;
               gzip_types *;
@@ -97,10 +98,10 @@
               # try_files \$uri @app;
 
 
-              add_header 'Access-Control-Allow-Origin' '*';
-              add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-              add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type';
-              add_header 'Access-Control-Allow-Credentials' 'true';
+              # add_header 'Access-Control-Allow-Origin' '*';
+              # add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+              # add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type';
+              # add_header 'Access-Control-Allow-Credentials' 'true';
 
           }
 

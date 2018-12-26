@@ -10,8 +10,7 @@ DNSMASQ_DOMAIN         := hyenalab.home
 # URL_PATH_CONSUL        := 8500
 # URL_PATH_TRAEFIK       := 80
 # URL_PATH_TRAEFIK_API   := 8080
-URL_PATH_NETDATA_REGISTRY  := "http://graphite-master1.$(DNSMASQ_DOMAIN)"
-URL_PATH_NETDATA_NODE      := "http://nfs-worker1.$(DNSMASQ_DOMAIN)"
+URL_PATH_NETDATA_REGISTRY  := "http://graphite-master1.$(DNSMASQ_DOMAIN):19999"
 URL_PATH_WHOAMI            := "http://whoami.$(DNSMASQ_DOMAIN)"
 URL_PATH_ECHOSERVER        := "http://echoserver.$(DNSMASQ_DOMAIN)"
 URL_PATH_ELASTICSEARCH     := "http://elasticsearch.$(DNSMASQ_DOMAIN)"
@@ -178,7 +177,7 @@ run-ansible-ruby: run-ansible-rvm
 run-ansible-perf: run-ansible-tuning
 
 run-ansible-tools:
-	@ansible-playbook -i inventory.ini vagrant_playbook.yml -v -f 10
+	@ansible-playbook -i inventory.ini tools.yml -v -f 10
 
 run-ansible-goss:
 	@ansible-playbook -i inventory.ini vagrant_playbook.yml -v -f 10 --tags goss
@@ -240,10 +239,11 @@ rebuild: destroy flush-cache bridge-up sleep ping-bridge run-bridge-ansible run-
 pip-install-pygments:
 	pip install Pygments
 
-# open-netdata-registry:
-# 	./scripts/open-browser.py $(URL_PATH_NETDATA_REGISTRY)
+# For performance tuning/measuring
+run-ansible-netdata:
+	@ansible-playbook -i inventory.ini netdata.yml -v
 
-# open-netdata-node:
-# 	./scripts/open-browser.py $(URL_PATH_NETDATA_NODE)
+open-netdata-registry:
+	./scripts/open-browser.py $(URL_PATH_NETDATA_REGISTRY)
 
-# open: open-netdata-registry open-netdata-node
+open: open-netdata-registry

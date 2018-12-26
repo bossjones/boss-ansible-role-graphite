@@ -35,15 +35,12 @@
 
   roles:
     - role: boss-ansible-role-etckeeper
-    - role: boss-ansible-role-debug
-      boss__debug__debug_variables_file: '/tmp/ansible_variables'
-      boss__debug__dump_dir: '/etc/ansible_dumps'
-      boss__debug__dump_type: 'unified' # seperate
-
-    - role: ansible-timezone
+    - role: boss-ansible-role-ntp
+      task: install
+      bossjones__user: vagrant
+      bossjones__group: vagrant
       timezone: 'America/New_York'
       timezone_update_hardware_clock: False
-    - role: ansible-ntp
       # defaults file for ansible-ntp
       # Defines if host is ntp_master
       # set ntp_master to true on specific group_vars/group
@@ -55,9 +52,15 @@
         - 1.ubuntu.pool.ntp.org
         - 2.ubuntu.pool.ntp.org
         - 3.ubuntu.pool.ntp.org
+    - role: boss-ansible-role-journald
+    - role: boss-ansible-role-debug
+      boss__debug__debug_variables_file: '/tmp/ansible_variables'
+      boss__debug__dump_dir: '/etc/ansible_dumps'
+      boss__debug__dump_type: 'unified' # seperate
 
-      # Defines your primary domain name (FQDN)
-      ntp_pri_domain_name: 'localdomain'
+    - role: ansible-timezone
+      timezone: 'America/New_York'
+      timezone_update_hardware_clock: False
 
     - role: ansible-nginx
       nginx_listen_port: 8080
@@ -69,89 +72,6 @@
       graphite_cache_graphite_url: 'http://127.0.0.1:8083'
       bossjones__user: vagrant
       bossjones__group: vagrant
-
-
-    # # weekly
-    # # size 50M
-    # # missingok
-    # # rotate 10
-    # # compress
-    # # delaycompress
-    # # notifempty
-    # # copytruncate
-    # # su root syslog
-    # - role: ansible-logrotate
-    #   # defaults file for ansible-logrotate
-    #   # Defines if you want your log files compressed
-    #   logrotate_compress: false
-
-    #   # packages drop log rotation information into this directory
-    #   logrotate_conf_dir: '/etc/logrotate.d/'
-
-    #   logrotate_config: true
-
-    #   logrotate_configs:
-    #     - name: 'carbon-cache'
-    #       compress: true
-    #       copytruncate: false
-    #       create:
-    #         mode: '640'
-    #         owner: 'graphite'
-    #         group: 'graphite'
-    #       delaycompress: true
-    #       logs:
-    #         - '/var/log/netdata/*.log'
-    #       # If the log file is missing, go on to the next one without
-    #       # issuing an error message.
-    #       missingok: true
-    #       # Do not rotate the log if it is empty
-    #       notifempty: true
-    #       postrotate:
-    #         - '/bin/kill -HUP `pidof netdata 2>/dev/null` 2>/dev/null || true'
-    #       rotate: '14'
-    #       rotation: 'daily'
-    #       sharedscripts: true
-    #     - name: 'nginx'
-    #       compress: true
-    #       copytruncate: false
-    #       create:
-    #         mode: '664'
-    #         owner: 'www-data'
-    #         group: 'adm'
-    #       delaycompress: true
-    #       logs:
-    #         - '/var/log/nginx/*.log'
-    #       # If the log file is missing, go on to the next one without
-    #       # issuing an error message.
-    #       missingok: true
-    #       # Do not rotate the log if it is empty
-    #       notifempty: true
-    #       postrotate:
-    #         - '[ ! -f /var/run/nginx.pid ] || kill -HUP `cat /var/run/nginx.pid`'
-    #       rotate: '20'
-    #       rotation: 'daily'
-    #       sharedscripts: true
-
-
-    #   # create new (empty) log files after rotating old ones
-    #   logrotate_create_new: true
-
-    #   logrotate_default_backlogs_rotate: '4'
-
-    #   logroate_default_configs:
-    #     - 'apt'
-    #     - 'dpkg'
-    #     - 'rsyslog'
-    #     - 'ufw'
-
-    #   # Defines the default rotate schedule
-    #   # hourly | daily | weekly | monthly
-    #   logrotate_default_rotate: 'daily'
-
-    #   # Defines if logrotate configs defined in logroate_default_configs
-    #   # should be removed or not
-    #   logrotate_remove_default_configs: false
-
 
   tasks:
 
