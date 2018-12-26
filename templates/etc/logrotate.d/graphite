@@ -1,4 +1,4 @@
-/var/log/*.log /var/log/*/*.log {
+/var/log/*uwsgi_graphite*.log {
   weekly
   size 50M
   missingok
