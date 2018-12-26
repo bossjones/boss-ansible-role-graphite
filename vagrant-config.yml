@@ -1,0 +1,19 @@
+# https://gist.github.com/gnarf/b103e77f37236ca72d8e
+:vms:
+  graphite-master1:
+    :hostname: "graphite-master1"
+    :ip: "192.168.50.105"
+    :ram: 2048
+    :cpu: 2
+    :box: "ubuntu/xenial64"
+    :id: 10
+
+:groups:
+  graphite-master1:
+    - graphite-master1
+  servers:
+    - graphite-master1
+  kubernetes-graphite-master1:
+    - graphite-master1
+  kubernetes:
+    - graphite-master1
