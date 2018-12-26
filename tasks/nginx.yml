@@ -113,7 +113,10 @@
     owner: "root"
     group: "root"
     mode: 0644
-  notify: restart nginx
+  notify:
+  # - restart uwsgi
+  - restart nginx
+  # - restart carbon-cache
 
 - name: 'Create symlink for /etc/nginx/sites-enabled/graphite'
   file:
