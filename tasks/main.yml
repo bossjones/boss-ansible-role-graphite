@@ -1,3 +1,111 @@
+---
 - include_tasks: facts.yml
 
-- include: "{{task| default('install')}}.yml"
+# Install graphite
+
+- name: Create user
+  user:
+    name: "{{ graphite_user }}"
+    comment: "Graphite user"
+
+- name: "Run tasks on a RedHat based system"
+  include: RedHat.yml
+  when: ansible_os_family == "RedHat"
+
+- name: "Run tasks on a Debian based system"
+  include: Debian.yml
+  when: ansible_os_family == "Debian"
+
+# Newer versions of pip needs --no-binary=:all: for graphite
+# ref: https://github.com/graphite-project/graphite-web/issues/1508
+- name: Setup graphite with pip
+  pip:
+    name: "{{ item }}"
+    extra_args: "--no-binary=:all:"
+  with_items: "{{ graphite_install_requirements[graphite_install_version] }}"
+  environment:
+    PYTHONPATH: "{{ graphite_install_path }}/lib:{{ graphite_install_path }}/webapp"
+  register: graphite_installed_new
+  notify: restart carbon-cache
+  when: >
+    ansible_distribution_release == "xenial"
+    or ansible_distribution_release == "stretch"
+
+- name: Setup graphite with pip
+  pip:
+    name: "{{ item }}"
+  with_items: "{{ graphite_install_requirements[graphite_install_version] }}"
+  environment:
+    PYTHONPATH: "{{ graphite_install_path }}/lib:{{ graphite_install_path }}/webapp"
+  register: graphite_installed_old
+  notify: restart carbon-cache
+  when: >
+    ansible_distribution_release != "xenial"
+    and ansible_distribution_release != "stretch"
+
+- name: Set perms for graphite storage
+  file:
+    path: "{{ graphite_install_path }}/storage"
+    owner: "{{ graphite_user }}"
+    recurse: yes
+    state: directory
+  when: graphite_installed_old|changed or graphite_installed_new|changed
+
+- name: Install webapp settings
+  template:
+    src: local_settings.py.j2
+    dest: "{{ graphite_install_path }}/webapp/graphite/local_settings.py"
+  notify: restart carbon-cache
+
+- name: Install carbon settings
+  template:
+    src: carbon.conf.j2
+    dest: "{{ graphite_install_path }}/conf/carbon.conf"
+  notify: restart carbon-cache
+
+- name: Install storage schemas
+  template:
+    src: storage-schemas.conf.j2
+    dest: "{{ graphite_install_path }}/conf/storage-schemas.conf"
+  notify: restart carbon-cache
+
+- name: Install 0.9 uwsgi configuration
+  template:
+    src: wsgi.py.j2
+    dest: "{{ graphite_install_path }}/conf/wsgi.py"
+  notify: restart uwsgi
+  when:  graphite_install_version | version_compare("1.0.0", "<")
+
+- name: Install 1.0 uwsgi configuration
+  template:
+    src: wsgi-1.0.x.py.j2
+    dest: "{{ graphite_install_path }}/conf/wsgi.py"
+  notify: restart uwsgi
+  when:  graphite_install_version | version_compare("1.0.0", ">=")
+
+- name: Use manage.py to run configuration tasks
+  include: manage.yml
+  when: graphite_install_version | version_compare("1.0.2", "<")
+
+- name: Use django-admin.py to run configuration tasks
+  include: django-admin.yml
+  when: graphite_install_version | version_compare("1.0.2", ">=")
+
+- name: Remove temp file
+  file:
+    path: /tmp/createsuperuser.py
+    state: absent
+
+- name: Enable uwsgi service
+  service:
+    name: uwsgi
+    enabled: yes
+
+- name: Enable carbon-cache service
+  service:
+    name: carbon-cache
+    enabled: yes
+
+
+- name: "Configure nginx"
+  include: nginx.yml

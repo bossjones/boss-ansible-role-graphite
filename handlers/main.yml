@@ -1,7 +1,7 @@
 ---
-# handlers file for boss-ansible-role-graphite
 
-- name: restart journald
-  service:
-    name: systemd-journald
-    state: restarted
+- name: restart carbon-cache
+  service: name=carbon-cache state=restarted
+
+- name: restart uwsgi
+  service: name=uwsgi state=restarted

@@ -1,0 +1,92 @@
+
+- name: "create /etc/nginx/sites-available/graphite"
+  copy:
+    content: |
+
+      log_format graphite '$remote_addr - $remote_user [$time_local] '
+            '"$request" $status $body_bytes_sent '
+            '$request_length $request_time '
+            '"$http_referer" "$http_user_agent"';
+
+      charset utf-8;
+      access_log /var/log/nginx/graphite.access.log graphite;
+      error_log /var/log/nginx/graphite.error.log graphite;
+
+      upstream backend {
+          server 127.0.0.1:19999;
+          keepalive 1024;
+      }
+
+      server {
+          listen *:8083;
+          # the virtual host name of this
+          # server_name graphite.example.com;
+          underscores_in_headers on;
+
+          location / {
+              proxy_set_header X-Forwarded-Host $host;
+              proxy_set_header X-Forwarded-Server $host;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_pass http://backend;
+              proxy_http_version 1.1;
+              proxy_pass_request_headers on;
+              proxy_set_header Connection "keep-alive";
+              proxy_store off;
+              gzip on;
+              gzip_proxied any;
+              gzip_types *;
+
+              include uwsgi_params;
+              uwsgi_pass 127.0.0.1:3031;
+
+              # Block any HTTP requests other than GET, HEAD, and OPTIONS
+              limit_except GET HEAD OPTIONS {
+                  deny all;
+            }
+
+            location /static {
+              alias /opt/graphite/webapp/content;
+              expires max;
+            }
+
+            location /stub_status {
+                stub_status on;
+                access_log off;
+                allow 192.168.1.0/24;
+                allow 127.0.0.1;
+                deny all;
+            }
+
+            location /nginx_status {
+              stub_status on;
+              access_log   off;
+              allow 127.0.0.1;
+              deny all;
+            }
+
+          }
+
+          # WordPress Pingback Request Denial
+          if ($http_user_agent ~* "WordPress") {
+              return 403;
+          }
+
+      }
+
+
+    dest: "/etc/nginx/sites-available/graphite"
+    owner: "root"
+    group: "root"
+    mode: 0644
+
+- name: 'Create symlink for /etc/nginx/sites-enabled/graphite'
+  file:
+    src: "/etc/nginx/sites-available/graphite"
+    dest: "/etc/nginx/sites-enabled/graphite"
+    state: link
+
+
+- name: 'delete symlink for /etc/nginx/sites-enabled/default'
+  file:
+    dest: "/etc/nginx/sites-enabled/default"
+    state: absent
