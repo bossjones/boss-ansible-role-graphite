@@ -79,10 +79,10 @@
       yum: name=nginx
       when: ansible_os_family == "RedHat"
 
-    - name: Install nginx config
-      template:
-        src: templates/graphite.conf.j2
-        dest: /etc/nginx/conf.d/graphite.conf
+    # - name: Install nginx config
+    #   template:
+    #     src: templates/graphite.conf.j2
+    #     dest: /etc/nginx/conf.d/graphite.conf
 
     - name: Start nginx
       service:
