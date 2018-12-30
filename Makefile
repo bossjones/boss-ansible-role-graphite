@@ -183,6 +183,8 @@ run-ansible-tools:
 run-ansible-goss:
 	@ansible-playbook -i inventory.ini vagrant_playbook.yml -v -f 10 --tags goss
 
+converge: up run-ansible
+
 ping:
 	@ansible-playbook -v -i inventory.ini ping.yml -vvvvv
 
