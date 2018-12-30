@@ -103,12 +103,12 @@
       tags:
         - boss-ansible-role-debug
 
-    # - role: boss-ansible-role-tools
-    #   task: tools
-    #   bossjones__user: vagrant
-    #   bossjones__group: vagrant
-    #   tags:
-    #     - boss-ansible-role-tools
+    - role: boss-ansible-role-tools
+      task: tools
+      bossjones__user: vagrant
+      bossjones__group: vagrant
+      tags:
+        - boss-ansible-role-tools
 
     - role: ansible-nginx
       nginx_listen_port: 8080
