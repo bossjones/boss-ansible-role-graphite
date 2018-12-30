@@ -29,6 +29,10 @@
 
 - name: Make sure processes are running
   shell: "pgrep {{ item }}"
+  retries: 10
+  delay: 3
+  register: result
+  until: result.rc == 0
   with_items:
     - carbon-cache
     - uwsgi
