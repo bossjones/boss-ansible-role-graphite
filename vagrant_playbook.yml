@@ -3,18 +3,12 @@
 # SERVERS: Install and configure ntp
 ##############################################################################
 - hosts: servers
-  name: servers install etckeeper
+  name: bootstrap servers with bootstrap role, ntp, timezone, update hosts, and more
   gather_facts: True
   become: yes
   become_method: sudo
   environment:
     DEBIAN_FRONTEND: noninteractive
-  tags:
-    - servers
-    - install
-    - servers_install
-    - etckeeper
-    - tools
 
   pre_tasks:
 
@@ -34,7 +28,54 @@
       when: ansible_os_family == "Debian"
 
   roles:
+    - role: boss-ansible-role-update-hosts
+      boss__update__hosts__hosts_file: /etc/hosts
+      # ansible group to use when finding ip addresses
+      boss__update__hosts__ansible_group: "servers"
+
+      boss__update__hosts__networking_interface: 'enp0s8' # enp0s8 (if vagrant)
+      tags:
+        - boss-ansible-role-update-hosts
+
+    - role: boss-ansible-role-bootstrap
+      # Disable raw commands to avoid sudo issues.
+      boss__bootstrap_raw: False
+      # Don't set domain on Travis.
+      boss__bootstrap_domain: ''
+      # Try bootstrapping a different IP address to avoid idempotency loop.
+      # boss__bootstrap_ipv4: '127.0.1.2'
+      # boss__hosts_file: /etc/hosts.molecule
+      boss__bootstrap_admin_default_users:
+        - name: bossjones
+      boss__bootstrap_admin_groups: [ 'admins', 'staff', 'adm', 'sudo', 'bossjones' ]
+      boss__bootstrap_admin_system: False
+      tags:
+        - boss-ansible-role-bootstrap
+
+    - role: boss-ansible-role-core
+      tags:
+        - boss-ansible-role-core
+
+    - role: boss-ansible-role-fact
+      tags:
+        - boss-ansible-role-fact
+
+    - role: boss-ansible-role-environment
+      tags:
+        - boss-ansible-role-environment
+
     - role: boss-ansible-role-etckeeper
+      tags:
+        - boss-ansible-role-etckeeper
+
+    # - role: geerlingguy.pip
+
+    - role: boss-ansible-role-timezone
+      timezone: 'America/New_York'
+      timezone_update_hardware_clock: False
+      tags:
+        - boss-ansible-role-timezone
+
     - role: boss-ansible-role-ntp
       task: install
       bossjones__user: vagrant
@@ -52,18 +93,27 @@
         - 1.ubuntu.pool.ntp.org
         - 2.ubuntu.pool.ntp.org
         - 3.ubuntu.pool.ntp.org
-    - role: boss-ansible-role-journald
+      tags:
+        - boss-ansible-role-ntp
+
     - role: boss-ansible-role-debug
       boss__debug__debug_variables_file: '/tmp/ansible_variables'
       boss__debug__dump_dir: '/etc/ansible_dumps'
-      boss__debug__dump_type: 'unified' # seperate
+      boss__debug__dump_type: 'seperate' # seperate
+      tags:
+        - boss-ansible-role-debug
 
-    - role: ansible-timezone
-      timezone: 'America/New_York'
-      timezone_update_hardware_clock: False
+    # - role: boss-ansible-role-tools
+    #   task: tools
+    #   bossjones__user: vagrant
+    #   bossjones__group: vagrant
+    #   tags:
+    #     - boss-ansible-role-tools
 
     - role: ansible-nginx
       nginx_listen_port: 8080
+      tags:
+        - ansible-nginx
       # SOURCE: https://uwsgi-docs.readthedocs.io/en/latest/Nginx.html
     - role: ../
       graphite_secret_key: testtest123
@@ -73,95 +123,95 @@
       bossjones__user: vagrant
       bossjones__group: vagrant
 
-  tasks:
+  # tasks:
 
-    - name: Install nginx (Debian)
-      apt: name=nginx
-      when: ansible_os_family == "Debian"
+  #   - name: Install nginx (Debian)
+  #     apt: name=nginx
+  #     when: ansible_os_family == "Debian"
 
-    - name: Install nginx (RedHat)
-      yum: name=nginx
-      when: ansible_os_family == "RedHat"
+  #   - name: Install nginx (RedHat)
+  #     yum: name=nginx
+  #     when: ansible_os_family == "RedHat"
 
-    - name: Start nginx
-      service:
-        name: nginx
-        state: restarted
+  #   - name: Start nginx
+  #     service:
+  #       name: nginx
+  #       state: restarted
 
-    - name: Make sure processes are running
-      shell: "pgrep {{ item }}"
-      with_items:
-        - carbon-cache
-        - uwsgi
-        - nginx
+  #   - name: Make sure processes are running
+  #     shell: "pgrep {{ item }}"
+  #     with_items:
+  #       - carbon-cache
+  #       - uwsgi
+  #       - nginx
 
-    - name: Make sure that the carbon-cache process has the expected open file limit
-      shell: "test $(awk '/^Max open files/ { print $4 }' /proc/$(pidof -x carbon-cache.py)/limits) -eq 4096"
+  #   - name: Make sure that the carbon-cache process has the expected open file limit
+  #     shell: "test $(awk '/^Max open files/ { print $4 }' /proc/$(pidof -x carbon-cache.py)/limits) -eq 4096"
 
-    - name: Get sample config file parameters
-      shell: "grep -vE '^#' /opt/graphite/conf/carbon.conf.example | awk -F '=' '/=/{ print $1 }'"
-      register: carbon_conf_example_default_params
+  #   - name: Get sample config file parameters
+  #     shell: "grep -vE '^#' /opt/graphite/conf/carbon.conf.example | awk -F '=' '/=/{ print $1 }'"
+  #     register: carbon_conf_example_default_params
 
-    - name: Make sure that we have set all default params in carbon.conf
-      shell: "grep -E '^{{ item }}' /opt/graphite/conf/carbon.conf"
-      with_items: "{{ carbon_conf_example_default_params.stdout_lines }}"
+  #   - name: Make sure that we have set all default params in carbon.conf
+  #     shell: "grep -E '^{{ item }}' /opt/graphite/conf/carbon.conf"
+  #     with_items: "{{ carbon_conf_example_default_params.stdout_lines }}"
 
-    - name: Get set config file parameters
-      shell: "grep -vE '^#' /opt/graphite/conf/carbon.conf | awk '/=/{ print $1 }'"
-      register: carbon_conf_params
+  #   - name: Get set config file parameters
+  #     shell: "grep -vE '^#' /opt/graphite/conf/carbon.conf | awk '/=/{ print $1 }'"
+  #     register: carbon_conf_params
 
-    - name: Make sure that carbon.conf is not using params not found in the example file
-      shell: "grep '{{ item }}' /opt/graphite/conf/carbon.conf.example"
-      with_items: "{{ carbon_conf_params.stdout_lines }}"
+  #   - name: Make sure that carbon.conf is not using params not found in the example file
+  #     shell: "grep '{{ item }}' /opt/graphite/conf/carbon.conf.example"
+  #     with_items: "{{ carbon_conf_params.stdout_lines }}"
 
-    - name: "Make sure we have a Graphite install at localhost:8080"
-      shell: "curl -s http://localhost:8080 | grep 'Graphite Browser'"
+  #   - name: "Make sure we have a Graphite install at localhost:8080"
+  #     shell: "curl -s http://localhost:8080 | grep 'Graphite Browser'"
 
-    - name: "Make sure that the static content works"
-      shell: "curl -s http://localhost:8080/static/js/composer.js"
+  #   - name: "Make sure that the static content works"
+  #     shell: "curl -s http://localhost:8080/static/js/composer.js"
 
-    - name: Download a sample graph
-      shell: "curl -so out 'http://localhost:8080/render/?width=586&height=308&_salt=1448804805.156&target=carbon.agents.*-a.cache.size'"
+  #   - name: Download a sample graph
+  #     shell: "curl -so out 'http://localhost:8080/render/?width=586&height=308&_salt=1448804805.156&target=carbon.agents.*-a.cache.size'"
 
-    - name: Make sure that we got a image
-      shell: file out | grep -i image
+  #   - name: Make sure that we got a image
+  #     shell: file out | grep -i image
 
-    - name: "Insert a metric to carbon"
-      shell: echo "local.random.diceroll 4711 $(date +%s)" | nc -w 2 0.0.0.0 2003
+  #   - name: "Insert a metric to carbon"
+  #     shell: echo "local.random.diceroll 4711 $(date +%s)" | nc -w 2 0.0.0.0 2003
 
-    - name: Wait 5 sec
-      command: sleep 5 # pause failes on centos 7 for some reason
+  #   - name: Wait 5 sec
+  #     command: sleep 5 # pause failes on centos 7 for some reason
 
-    - name: Search for the value from graphite-web
-      shell: "curl -s 'http://localhost:8080/render/?_salt=1448817576.96&target=local.random.diceroll&format=csv' | grep ',4711.0'"
+  #   - name: Search for the value from graphite-web
+  #     shell: "curl -s 'http://localhost:8080/render/?_salt=1448817576.96&target=local.random.diceroll&format=csv' | grep ',4711.0'"
 
-    - name: Remove false positives from carbon creates.log
-      lineinfile:
-        dest: /opt/graphite/storage/log/carbon-cache/carbon-cache-a/creates.log
-        line: "- REMOVED -"
-        regexp: "{{ item }}"
-      with_items:
-        - "creating database file.*errors.wsp"
-        - "creating database metric carbon.agents.*errors"
-        - "new metric carbon.agents.*a.errors matched schema carbon"
-        - "new metric carbon.agents.*a.errors matched aggregation schema default"
-      failed_when: False
+  #   - name: Remove false positives from carbon creates.log
+  #     lineinfile:
+  #       dest: /opt/graphite/storage/log/carbon-cache/carbon-cache-a/creates.log
+  #       line: "- REMOVED -"
+  #       regexp: "{{ item }}"
+  #     with_items:
+  #       - "creating database file.*errors.wsp"
+  #       - "creating database metric carbon.agents.*errors"
+  #       - "new metric carbon.agents.*a.errors matched schema carbon"
+  #       - "new metric carbon.agents.*a.errors matched aggregation schema default"
+  #     failed_when: False
 
-    - name: Search for errors in logs
-      shell: test -f {{ item }} && cat {{ item }}
-      register: logout
-      failed_when: >
-        'error' in logout.stdout or
-        'Error' in logout.stdout or
-        'ERROR' in logout.stdout
-      with_items:
-        - /var/log/uwsgi_graphite.log
-        - /var/log/uwsgi/app/graphite.log
-        - /var/log/nginx/graphite.error.log
-        - /var/log/nginx/error.log
-        - /opt/graphite/storage/log/webapp/info.log
-        - /opt/graphite/storage/log/webapp/exception.log
-        - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/query.log
-        - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/listener.log
-        - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/creates.log
-        - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/console.log
+  #   - name: Search for errors in logs
+  #     shell: test -f {{ item }} && cat {{ item }}
+  #     register: logout
+  #     failed_when: >
+  #       'error' in logout.stdout or
+  #       'Error' in logout.stdout or
+  #       'ERROR' in logout.stdout
+  #     with_items:
+  #       - /var/log/uwsgi_graphite.log
+  #       - /var/log/uwsgi/app/graphite.log
+  #       - /var/log/nginx/graphite.error.log
+  #       - /var/log/nginx/error.log
+  #       - /opt/graphite/storage/log/webapp/info.log
+  #       - /opt/graphite/storage/log/webapp/exception.log
+  #       - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/query.log
+  #       - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/listener.log
+  #       - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/creates.log
+  #       - /opt/graphite/storage/log/carbon-cache/carbon-cache-a/console.log

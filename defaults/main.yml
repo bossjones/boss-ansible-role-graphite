@@ -1,4 +1,6 @@
 ---
+boss__graphite__validate: True
+
 graphite_install_version: 1.1.3
 
 graphite_user: graphite
@@ -149,4 +151,15 @@ graphite_install_requirements:
     - urllib3==1.22
     - whisper==1.1.3
 
-graphite_dns_fqdn: graphite-master1.hyenalab.home
+
+boss__graphite__master_group_label: 'graphite-master-servers'
+
+boss__graphite__master_server_name: "{{ groups[boss__graphite__master_group_label] }}"
+
+boss__graphite__graphite_pri_domain_name: "{{boss__pri_domain_name if boss__pri_domain_name is defined else ''}}"
+
+boss__graphite__graphite_dns_fqdn: "{{boss__graphite__master_server_name}}{{boss__graphite__graphite_pri_domain_name}}"
+
+
+# This will be a global boss var
+# boss__pri_domain_name:

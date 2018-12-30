@@ -140,3 +140,7 @@
 
 - name: "Configure nginx"
   include: nginx.yml
+
+
+- include_tasks: validate.yml
+  when: boss__graphite__validate is defined and boss__graphite__validate|bool

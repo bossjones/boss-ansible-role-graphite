@@ -1,7 +1,7 @@
 [uwsgi]
 autoload = true
 master = true
-workers = 2
+workers = {{uwsgi_graphite_processes}}
 no-orphans = true
 chmod-socket = 660
 log-date = true
