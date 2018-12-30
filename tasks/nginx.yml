@@ -27,7 +27,7 @@
       server {
           listen *:8080;
           # the virtual host name of this
-          # server_name {{graphite_dns_fqdn}};
+          # server_name {{boss__graphite__graphite_dns_fqdn}};
           underscores_in_headers on;
 
           # FIXME: Might not work?

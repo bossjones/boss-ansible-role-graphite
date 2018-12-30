@@ -139,7 +139,8 @@
 
 
 - name: "Configure nginx"
-  include: nginx.yml
+  include_tasks: nginx.yml
+  when: boss__graphite__enable_nginx is defined and boss__graphite__enable_nginx|bool
 
 
 - include_tasks: validate.yml
