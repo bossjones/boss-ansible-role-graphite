@@ -10,30 +10,52 @@
   environment:
     DEBIAN_FRONTEND: noninteractive
 
-  pre_tasks:
-
-    - name: RedHat | Install a few packages for the tests
-      yum: name={{ item }}
-      with_items:
-        - file
-        - nc
-      when: ansible_os_family == "RedHat"
-
-    - name: Debian | Install a few packages for the tests
-      apt: name={{ item }}
-      with_items:
-        - curl
-        - file
-        - netcat
-      when: ansible_os_family == "Debian"
-
   roles:
+
     - role: boss-ansible-role-update-hosts
       boss__update__hosts__hosts_file: /etc/hosts
       # ansible group to use when finding ip addresses
       boss__update__hosts__ansible_group: "servers"
 
-      boss__update__hosts__networking_interface: 'enp0s8' # enp0s8 (if vagrant)
+      boss__update__hosts__networking_interface: "enp0s8" # enp0s8 (if vagrant)
+
+      ### NEW vars
+      # SOURCE: https://github.com/bertvv/ansible-role-hosts/blob/master/defaults/main.yml
+
+      boss__update__hosts__hosts_playbook_version: "1.0.1"
+
+      # If set to true, an entry for `ansible_hostname`, bound to the host's default IPv4 address is added added.
+      boss__update__hosts__hosts_add_default_ipv4: true
+
+      # If set to true, basic IPv6 entries (localhost6, ip6-localnet, etc) are added.
+      boss__update__hosts__hosts_add_basic_ipv6: true
+
+      # If set to true, an entry for every host managed by Ansible is added. Remark that this makes `boss__update__hosts__hosts_add_default_ipv4` unnecessary, as it will be added as wel by this setting.
+      boss__update__hosts__hosts_add_ansible_managed_hosts: true
+
+      # Select specific groups of Ansible managed hosts to be added in the hosts file.
+      boss__update__hosts__hosts_add_ansible_managed_hosts_groups: ['servers']
+
+      # Custom hosts entries to be added
+      boss__update__hosts__hosts_entries: []
+
+      # Custom host file snippets to be added
+      boss__update__hosts__hosts_file_snippets: []
+
+      # IP protocol to use
+      boss__update__hosts__hosts_ip_protocol: 'ipv4'
+
+      # Network interface to use
+      boss__update__hosts__hosts_network_interface: "{{ boss__update__hosts__networking_interface }}"
+
+      # convenience variable that has ansible_ as part of name for dynamic loading
+      boss__update__hosts__hosts_ansible_network_interface: "ansible_{{ boss__update__hosts__networking_interface }}"
+
+      # Backup of previous host
+      boss__update__hosts__host_file_backup: yes
+
+      # Use old 'override' style or new 'smart' style
+      boss__update__hosts__default_task: "smart"
       tags:
         - boss-ansible-role-update-hosts
 
@@ -52,10 +74,6 @@
       tags:
         - boss-ansible-role-bootstrap
 
-    - role: boss-ansible-role-core
-      tags:
-        - boss-ansible-role-core
-
     - role: boss-ansible-role-fact
       tags:
         - boss-ansible-role-fact
@@ -68,7 +86,7 @@
       tags:
         - boss-ansible-role-etckeeper
 
-    # - role: geerlingguy.pip
+    # # - role: geerlingguy.pip
 
     - role: boss-ansible-role-timezone
       timezone: 'America/New_York'
@@ -109,6 +127,12 @@
       bossjones__group: vagrant
       tags:
         - boss-ansible-role-tools
+
+    - role: boss-ansible-role-journald
+      bossjones__user: vagrant
+      bossjones__group: vagrant
+      tags:
+        - boss-ansible-role-journald
 
     - role: ansible-nginx
       nginx_listen_port: 8080
